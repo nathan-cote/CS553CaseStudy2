@@ -2,7 +2,7 @@
 
 PORT=22003
 MACHINE=paffenroth-23.dyn.wpi.edu
-STUDENT_ADMIN_KEY_PATH=$HOME/home/nacote1/CS553/CS553-CaseStudy-01
+STUDENT_ADMIN_KEY_PATH=$HOME/CS553/CS553-CaseStudy-01
 
 # Clean up from previous runs
 ssh-keygen -f "/home/nacote1/.ssh/known_hosts" -R "[paffenroth-23.dyn.wpi.edu]:22003"
@@ -44,8 +44,23 @@ cat authorized_keys
 scp -i student-admin_key -P ${PORT} -o StrictHostKeyChecking=no authorized_keys student-admin@${MACHINE}:~/.ssh/
 
 # Add the key to the ssh-agent
+# Reworked with the help from the built-in Google search AI. Initial search included "What does eval "$(ssh-agent -s)" ssh-add mykey do and why do I need it", followed by "I am trying to use this for automation but it prompts me to enter my passphrase when I try to use it, which I need automated", "My ssh config file is as you instructed, by when I ran my script to keygen a new key with a specified passphrase on the new server, it still prompted me to type it in myself", "I already have -N for the keygen line, but I am still receiving a prompt for me to type what I specified it as, likely from the keyadd line", and finally "It still made me enter the passphrase and I received this error:{error pasted showing permission denied by tmp folder}".
+PASSPHRASE="careful"
+KEY_PATH="$HOME/CS553/CS553-CaseStudy-01/tmp/mykey"
+
 eval "$(ssh-agent -s)"
-ssh-add mykey
+
+export DISPLAY=:0
+export SSH_ASKPASS_REQUIRE=force
+export SSH_ASKPASS=$(mktemp --tmpdir=$HOME)
+
+echo -e "#!/bin/bash\necho '$PASSPHRASE'" > "$SSH_ASKPASS"
+chmod 700 "$SSH_ASKPASS"
+
+ssh-add "$KEY_PATH" < /dev/null
+
+rm -f "$SSH_ASKPASS"
+unset SSH_ASKPASS SSH_ASKPASS_REQUIRE
 
 # Check the key file on the server
 echo "checking that the authorized_keys file is correct"
