@@ -23,6 +23,7 @@ for i in $(seq 1 $num_files); do
   echo "------------------------------------------------"
   echo "------------------------------------------------"
   if ssh -i $KEY -p $((${i} + ${PORT})) -o StrictHostKeyChecking=no student-admin@${MACHINE} hostname; then
+    #script $HOME/CS553/CS553-CaseStudy-01/group${i}-access.txt
     echo "group ${i} is vulnerable!"
     
     #send message to discord
