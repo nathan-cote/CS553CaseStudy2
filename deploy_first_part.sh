@@ -71,8 +71,12 @@ git clone --branch Case_Study_2 --single-branch https://github.com/VivekChoudhar
 # Copy the files to the server
 scp -P ${PORT} -o StrictHostKeyChecking=no -r Case-Study-2 student-admin@${MACHINE}:~/
 
+
 # check that the code in installed and start up the product
-# COMMAND="ssh -p ${PORT} -o StrictHostKeyChecking=no student-admin@${MACHINE}"
+COMMAND="ssh -p ${PORT} -o StrictHostKeyChecking=no student-admin@${MACHINE}"
+
+#chatgpt TODO
+${COMMAND} "cd ~/Case-Study-2 && chmod +x setup.sh && ./setup.sh"
 
 # ${COMMAND} "ls CS553_example"
 # ${COMMAND} "sudo apt install -qq -y python3-venv"

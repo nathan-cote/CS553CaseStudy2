@@ -6,3 +6,8 @@ torch==2.8.0
 scipy
 sentencepiece
 spaces
+
+gradio[mcp]
+gradio_client
+huggingface_hub
+safetensors
