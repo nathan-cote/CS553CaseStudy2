@@ -5,11 +5,11 @@ num_files=25
 group_num=3  # so we can skip our own group
 
 # vars
+source .env.local
 PORT=22000
 MACHINE=paffenroth-23.dyn.wpi.edu
 KEY=$HOME/CS553/CS553-CaseStudy-01/tmp/student-admin_key
 chmod 600 ${KEY}
-WEBHOOK_URL="https://discord.com/api/webhooks/1554256448081502314/muodhTKDVj4Lp8Rv4pSy36bwV0OItbReH9fdiO8303oVbIqBtIO8fBbIicmAH9niZZJ0"
 
 # Loop to create files
 for i in $(seq 1 $num_files); do
@@ -22,7 +22,7 @@ for i in $(seq 1 $num_files); do
   echo "trying group ${i} at port $((${i} + ${PORT})) "
   echo "------------------------------------------------"
   echo "------------------------------------------------"
-  if ssh -i $KEY -p $((${i} + ${PORT})) -o StrictHostKeyChecking=no student-admin@${MACHINE} hostname; then
+  if ssh -i $KEY -p $((${i} + ${PORT})) -o StrictHostKeyChecking=no -o ConnectTimeout=2 student-admin@${MACHINE} hostname; then
     #script $HOME/CS553/CS553-CaseStudy-01/group${i}-access.txt
     echo "group ${i} is vulnerable!"
     

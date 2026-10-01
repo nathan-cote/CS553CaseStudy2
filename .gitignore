@@ -4,3 +4,6 @@ my_key
 *.swp
 venv/
 .nfs00000001772ae4330000001b
+.env
+.env.local
+cron_debug.log
