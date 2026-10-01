@@ -1,13 +1,6 @@
-accelerate
-bitsandbytes
-protobuf
+-extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.8.0+cpu
 transformers
-torch==2.8.0
-scipy
-sentencepiece
-spaces
-
+accelerate
 gradio[mcp]
-gradio_client
 huggingface_hub
-safetensors

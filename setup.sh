@@ -29,6 +29,7 @@ fi
 
 echo "Creating virtual environment..."
 if [ ! -d "$VENV_DIR" ]; then
+    apt install python3-venv
     python3 -m venv "$VENV_DIR"
 else
     echo "Virtual environment already exists."

@@ -15,11 +15,11 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from huggingface_hub import InferenceClient
 
-model_path = "Qwen/Qwen2.5-3B-Instruct"  # Qwen/Qwen3-8B was too large
+model_path = "Qwen/Qwen2.5-0B-Instruct"  # Qwen/Qwen2.5-3B-Instruct was used in Case Study 1, but when prompting Claude Opus 5.5 with "I can't use Qwen2.5-3B-Instruct anymore as that is far too large. What other model should I use that is much smaller in size?", it suggests we switch to the 0.5B version to save space on the VM as the original 3B model is quite large (~6gb)
 remote_model_path = "openai/gpt-oss-20b"
 
 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=hf_token)
-model = AutoModelForCausalLM.from_pretrained(model_path, token=hf_token).half().cuda()
+model = AutoModelForCausalLM.from_pretrained(model_path, token=hf_token, torch_dtype="auto", device_map="auto")  # Adjusted with Claude Opus 5.5 to run on CPU as CUDA is no longer available
 
 def gen_safety_advice(prompt, platform):
     """Generate a 2-4 sentence segment of safety advice using the qwen local model or openai remote inference model based on a prompt.
@@ -39,7 +39,7 @@ def gen_safety_advice(prompt, platform):
     
     prompt = instruction.format(prompt)
 
-    if platform == "Local (Qwen/Qwen2.5-3B-Instruct)":
+    if platform == "Local (Qwen/Qwen2.5-0.5B-Instruct)":
         output_text = gen_local(prompt)
     else:
         output_text = gen_remote(prompt)
@@ -48,11 +48,10 @@ def gen_safety_advice(prompt, platform):
     print(f"cleaned_test: {cleaned_text}")
     return cleaned_text
 
-@spaces.GPU
 def gen_local(prompt):
-    gr.Info('Calling Qwen2.5-3B-Instruct (local)...')
+    gr.Info('Calling Qwen2.5-0.5B-Instruct (local)...')
     start_time = time.perf_counter()
-    generate_ids = model.generate(tokenizer(prompt, return_tensors='pt').input_ids.cuda(), max_new_tokens=4096)
+    generate_ids = model.generate(tokenizer(prompt, return_tensors='pt').input_ids.to(model.device), max_new_tokens=4096)  # Adjusted using Claude Opus 5.5 as CUDA is no longer available (run on CPU only)
     text = tokenizer.decode(generate_ids[0], skip_special_tokens=True)
     elapsed = time.perf_counter() - start_time
     print(f"[TIMING] platform=local elapsed={elapsed:.2f}s")
@@ -106,19 +105,10 @@ def infer(image_input, text_input, running_platform):
         )
         print(clipi_result)
     except Exception as e:
-        gr.Info(f"No free ZeroGPU usage available (needed to generate a caption from the provided image). Using text input provided instead.")
-        if running_platform == "Local (Qwen/Qwen2.5-3B-Instruct)":
-            gr.Info(f"Local model selected (needs ZeroGPU). Automatically retrying with the remote inference model.")
-            running_platform = "Remote (OpenAI/gpt-oss-20b)"
-            if text_input != "":
-                clipi_result = text_input
-            else:
-                gr.Info("No text input provided. Please provide a text description and try again.")
+        if text_input != "":
+            clipi_result = text_input
         else:
-            if text_input != "":
-                clipi_result = text_input
-            else:
-                gr.Info("No text input provided. Please provide a text description and try again.")
+            gr.Info("No text input provided. Please provide a text description and try again.")
 
     capt_prompt = f"""
     I'll give you a simple image caption, please provide a 2-4 sentence segment of the most important safety advice that would fit well with the image.
@@ -159,11 +149,11 @@ with gr.Blocks(css=css) as demo:
             with gr.Column():
                 image_in = gr.Image(label="Image Input", type="filepath", elem_id="image-in")
                 text_input = gr.Textbox(label="(Optional) Image Description as Text", elem_id="text-input")
-                running_platform = gr.Radio(label="LLM Model", choices=["Local (Qwen/Qwen2.5-3B-Instruct)", "Remote (OpenAI/gpt-oss-20b)"])
+                running_platform = gr.Radio(label="LLM Model", choices=["Local (Qwen/Qwen2.5-0.5B-Instruct)", "Remote (OpenAI/gpt-oss-20b)"])
                 submit_btn = gr.Button('Give me safety advice')
             with gr.Column():
                 safety_advice = gr.Textbox(label="Generated Safety Advice", elem_id="safety_advice")
         
     submit_btn.click(fn=infer, inputs=[image_in, text_input, running_platform], outputs=[safety_advice])
 
-demo.queue(max_size=12).launch(ssr_mode=False, mcp_server=True)
+demo.queue(max_size=12).launch(server_name="0.0.0.0", ssr_mode=False, mcp_server=True)  # Adjusted with Claude Opus 5.5 when asked how to adjust to run on a vm instead of a HuggingFace space - necessary change to allow Gradio to accept connections outside the VM

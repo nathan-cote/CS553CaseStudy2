@@ -5,6 +5,8 @@ MACHINE=paffenroth-23.dyn.wpi.edu
 STUDENT_ADMIN_KEY_PATH=$HOME/CS553/CS553-CaseStudy-01
 TMP_PATH=$HOME/CS553/CS553-CaseStudy-01/tmp
 
+source .env.local
+
 # Clean up from previous runs
 ssh-keygen -f "/home/nacote1/.ssh/known_hosts" -R "[paffenroth-23.dyn.wpi.edu]:22003"
 rm -rf $TMP_PATH
@@ -26,7 +28,7 @@ chmod 600 student-admin_key
 
 # Create a unique key
 rm -f mykey
-ssh-keygen -f mykey -t ed25519 -N "careful"
+ssh-keygen -f mykey -t ed25519 -N "$PASSPHRASE"
 
 # Insert the key into the authorized_keys file on the server
 # One > creates
@@ -46,7 +48,6 @@ scp -i student-admin_key -P ${PORT} -o StrictHostKeyChecking=no authorized_keys 
 
 # Add the key to the ssh-agent
 # Reworked with the help from the built-in Google search AI. Initial search included "What does eval "$(ssh-agent -s)" ssh-add mykey do and why do I need it", followed by "I am trying to use this for automation but it prompts me to enter my passphrase when I try to use it, which I need automated", "My ssh config file is as you instructed, by when I ran my script to keygen a new key with a specified passphrase on the new server, it still prompted me to type it in myself", "I already have -N for the keygen line, but I am still receiving a prompt for me to type what I specified it as, likely from the keyadd line", and finally "It still made me enter the passphrase and I received this error:{error pasted showing permission denied by $TMP_PATH folder}".
-source .env.local
 KEY_PATH="$HOME/CS553/CS553-CaseStudy-01/$TMP_PATH/mykey"
 
 eval "$(ssh-agent -s)"
@@ -68,16 +69,15 @@ echo "checking that the authorized_keys file is correct"
 ssh -p ${PORT} -o StrictHostKeyChecking=no student-admin@${MACHINE} "cat ~/.ssh/authorized_keys"
 
 # clone the Case_Study_2 branch on the repo
-git clone --branch Case_Study_2 --single-branch https://github.com/VivekChoudhary77/CS553-CaseStudy-01/ Case-Study-2
+git clone https://github.com/nathan-cote/CS553CaseStudy2
 # Copy the files to the server
-scp -P ${PORT} -o StrictHostKeyChecking=no -r Case-Study-2 student-admin@${MACHINE}:~/
+scp -P ${PORT} -o StrictHostKeyChecking=no -r CS553CaseStudy2 student-admin@${MACHINE}:~/
 
-
-# check that the code in installed and start up the product
+# check that the code is installed and start up the product
 COMMAND="ssh -p ${PORT} -o StrictHostKeyChecking=no student-admin@${MACHINE}"
 
 #chatgpt TODO
-${COMMAND} "cd ~/Case-Study-2 && chmod +x setup.sh && ./setup.sh"
+${COMMAND} "cd ~/CS553CaseStudy2 && chmod +x setup.sh && ./setup.sh"
 
 # ${COMMAND} "ls CS553_example"
 # ${COMMAND} "sudo apt install -qq -y python3-venv"
