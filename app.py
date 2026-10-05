@@ -20,47 +20,38 @@ remote_model_path = "openai/gpt-oss-20b"
 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=hf_token)
 model = AutoModelForCausalLM.from_pretrained(model_path, token=hf_token, torch_dtype="auto", device_map="auto")  # Adjusted with Claude Opus 5.5 to run on CPU as CUDA is no longer available
 
-def gen_safety_advice(prompt, platform):
-    """Generate a 2-4 sentence segment of safety advice using the qwen local model or openai remote inference model based on a prompt.
-    
-    Args:
-        prompt: A string prompt containing an image description and safety_advice generation instructions.
-        
-    Returns:
-        A generated 2-4 sentence segment of safety advice string with special formatting and tokens removed.
-    """
-
-    instruction = """[INST] <<SYS>>\nYou are a professional safety analyst. Provide the most important safety advice based on the image description provided.
-            In your response, please limit safety advice to 2-4 sentences of the most crucial safety advice to consider. Provide a concise title before the safety advice.
-            Always answer with the top safety advice, while being safe as possible.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
-            If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\n\n{} [/INST]"""
-
-    
-    prompt = instruction.format(prompt)
-
+# Revised by Claude Opus 5.5 on Medium thinking to use Qwen's chat template instead of Ollama's while also providing better support for the local (small) model.
+def gen_safety_advice(description, platform):
+    """Generate a titled, 2-4 sentence segment of safety advice for an image description."""
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": f"Image description: {description}"},
+    ]
     if platform == "Local (Qwen/Qwen2.5-0.5B-Instruct)":
-        output_text = gen_local(prompt)
-    else:
-        output_text = gen_remote(prompt)
-    pattern = r'\[INST\].*?\[/INST\]'
-    cleaned_text = re.sub(pattern, '', output_text, flags=re.DOTALL)
-    print(f"cleaned_test: {cleaned_text}")
-    return cleaned_text
+        return gen_local(messages)
+    return gen_remote(messages)
 
-def gen_local(prompt):
+
+# Revised by Claude Opus 5.5 on Medium thinking to use Qwen's chat template instead of Ollama's.
+def gen_local(messages):
     gr.Info('Calling Qwen2.5-0.5B-Instruct (local)...')
     start_time = time.perf_counter()
-    generate_ids = model.generate(tokenizer(prompt, return_tensors='pt').input_ids.to(model.device), max_new_tokens=4096)  # Adjusted using Claude Opus 5.5 as CUDA is no longer available (run on CPU only)
-    text = tokenizer.decode(generate_ids[0], skip_special_tokens=True)
+    inputs = tokenizer.apply_chat_template(
+        messages, add_generation_prompt=True, return_dict=True, return_tensors="pt"
+    ).to(model.device)
+    generate_ids = model.generate(**inputs, max_new_tokens=256, do_sample=False)
+    new_tokens = generate_ids[0][inputs["input_ids"].shape[-1]:]  # drop the prompt tokens
+    text = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
     elapsed = time.perf_counter() - start_time
     print(f"[TIMING] platform=local elapsed={elapsed:.2f}s")
     return f"{text}\n\n_(Response time - {elapsed:.2f}s)_"
+
 
 def gen_remote(prompt):
     gr.Info('Calling OpenAI/gpt-oss-20b (remote)...')
     start_time = time.perf_counter()
     inf_client = InferenceClient(token=hf_token)
-    response = inf_client.chat_completion(model=remote_model_path, messages=[{"role": "user", "content": prompt}], max_tokens=4096)
+    response = inf_client.chat_completion(model=remote_model_path, messages=messages, max_tokens=4096)  # Revised by Claude Opus 5.5 on Medium thinking so the system message is passed properly, not as raw text inside the user message like before.
     text = response.choices[0].message.content
     elapsed = time.perf_counter() - start_time
     print(f"[TIMING] platform=remote elapsed={elapsed:.2f}s")
@@ -109,24 +100,8 @@ def infer(image_input, text_input, running_platform):
         else:
             gr.Info("No text input provided. Please provide a text description and try again.")
 
-    capt_prompt = f"""
-    I'll give you a simple image caption, please provide a 2-4 sentence segment of the most important safety advice that would fit well with the image.
-    Here's the image description: 
-    '{clipi_result}'
-    
-    """
-    result = gen_safety_advice(capt_prompt, running_platform)
-
-    result = get_text_after_colon(result)
-
-    # Split the text into paragraphs based on actual line breaks
-    paragraphs = result.split('\n')
-    
-    # Join the paragraphs back with an extra empty line between each paragraph
-    formatted_text = '\n\n'.join(paragraphs)
-
-
-    return formatted_text
+    # Simplified by Claude Opus 5.5 on Medium thinking into the below return statement as there was unneeded bloat from the original product on HuggingFace.
+    return gen_safety_advice(clipi_result, running_platform)
 
 css="""
 #col-container {max-width: 910px; margin-left: auto; margin-right: auto;}
@@ -151,7 +126,7 @@ with gr.Blocks(css=css) as demo:
                 running_platform = gr.Radio(label="LLM Model", choices=["Local (Qwen/Qwen2.5-0.5B-Instruct)", "Remote (OpenAI/gpt-oss-20b)"])
                 submit_btn = gr.Button('Give me safety advice')
             with gr.Column():
-                safety_advice = gr.Textbox(label="Generated Safety Advice", elem_id="safety_advice")
+                safety_advice = gr.Markdown(label="Generated Safety Advice", elem_id="safety_advice")  # Suggested by Claude Opus 5.5 on Medium thinking to change this from a Textbox to a Markdown for better formatting.
         
     submit_btn.click(fn=infer, inputs=[image_in, text_input, running_platform], outputs=[safety_advice])
 
