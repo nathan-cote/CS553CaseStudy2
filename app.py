@@ -30,10 +30,10 @@ def gen_safety_advice(prompt, platform):
         A generated 2-4 sentence segment of safety advice string with special formatting and tokens removed.
     """
 
-    instruction = """[INST] <<SYS>>\nYou are a professional safety analyst. Provide the most important safety advice based on the image description provided.
+    instruction = """You are a professional safety analyst. Provide the most important safety advice based on the image description provided.
             In your response, please limit safety advice to 2-4 sentences of the most crucial safety advice to consider. Provide a concise title before the safety advice.
             Always answer with the top safety advice, while being safe as possible.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
-            If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\n\n{} [/INST]"""
+            If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."""
 
     
     prompt = instruction.format(prompt)
@@ -42,10 +42,7 @@ def gen_safety_advice(prompt, platform):
         output_text = gen_local(prompt)
     else:
         output_text = gen_remote(prompt)
-    pattern = r'\[INST\].*?\[/INST\]'
-    cleaned_text = re.sub(pattern, '', output_text, flags=re.DOTALL)
-    print(f"cleaned_test: {cleaned_text}")
-    return cleaned_text
+    return prompt
 
 def gen_local(prompt):
     gr.Info('Calling Qwen2.5-0.5B-Instruct (local)...')
