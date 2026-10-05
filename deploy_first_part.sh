@@ -76,7 +76,7 @@ scp -P ${PORT} -o StrictHostKeyChecking=no -r CS553CaseStudy2 student-admin@${MA
 # check that the code is installed and start up the product
 COMMAND="ssh -p ${PORT} -o StrictHostKeyChecking=no student-admin@${MACHINE}"
 
-#chatgpt TODO
+scp -P ${PORT} -o StrictHostKeyChecking=no ~/.hf_token student-admin@${MACHINE}:~/.hf_token  # Suggested by Claude Opus 5.5 on Medium thinking when asked how to securely send my HuggingFace token to the class vm
 ${COMMAND} "cd ~/CS553CaseStudy2 && chmod +x setup.sh && ./setup.sh"
 
 # ${COMMAND} "ls CS553_example"

@@ -27,7 +27,7 @@ if [ ! -f "$REQUIREMENTS_FILE" ]; then
     exit 1
 fi
 
-# Updated the following block of code with Claude Opus 5.5 on Medium thinking when asked why pip was not installing on the remote machine (issue was caused due to lack of sudo)
+# Updated the following block of code with Claude Opus 5.5 on Medium thinking when asked why pip was not installing on the remote machine (issue was caused due to lack of)
 echo "Creating virtual environment..."
 if [ ! -x "$VENV_DIR/bin/pip" ]; then
     rm -rf "$VENV_DIR"
@@ -47,12 +47,18 @@ python -m pip install --upgrade pip
 echo "Installing dependencies from requirements.txt..."
 python -m pip install -r "$REQUIREMENTS_FILE"
 
-echo
+# The below code segment was suggested by Claude Opus 5.5 on Medium thinking when asked how to securely send my HuggingFace token to the class vm
 echo "Setup complete."
-echo
-echo "Virtual environment:"
-echo "  $VENV_DIR"
-echo
-echo "To activate it manually:"
-echo "  cd $PROJECT_DIR"
-echo "  source .venv/bin/activate"
+
+echo "Stopping any previously running app..."
+pkill -f "$VENV_DIR/bin/python app.py" || true
+
+if [ -f "$HOME/.hf_token" ]; then
+    export HF_TOKEN="$(cat "$HOME/.hf_token")"
+else
+    echo "WARNING: ~/.hf_token not found, remote model will not work"
+fi
+
+echo "Starting app..."
+nohup "$VENV_DIR/bin/python" app.py > "$PROJECT_DIR/log.txt" 2>&1 < /dev/null &
+echo "App started with PID $! (log: $PROJECT_DIR/log.txt)"
