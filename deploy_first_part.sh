@@ -5,7 +5,7 @@ MACHINE=paffenroth-23.dyn.wpi.edu
 STUDENT_ADMIN_KEY_PATH=$HOME/CS553/CS553-CaseStudy-01
 TMP_PATH=$HOME/CS553/CS553-CaseStudy-01/tmp
 
-source .env.local
+source "$HOME/CS553/CS553-CaseStudy-01/.env.local"
 
 # Clean up from previous runs
 ssh-keygen -f "/home/nacote1/.ssh/known_hosts" -R "[paffenroth-23.dyn.wpi.edu]:22003"
@@ -48,7 +48,7 @@ scp -i student-admin_key -P ${PORT} -o StrictHostKeyChecking=no authorized_keys 
 
 # Add the key to the ssh-agent
 # Reworked with the help from the built-in Google search AI. Initial search included "What does eval "$(ssh-agent -s)" ssh-add mykey do and why do I need it", followed by "I am trying to use this for automation but it prompts me to enter my passphrase when I try to use it, which I need automated", "My ssh config file is as you instructed, by when I ran my script to keygen a new key with a specified passphrase on the new server, it still prompted me to type it in myself", "I already have -N for the keygen line, but I am still receiving a prompt for me to type what I specified it as, likely from the keyadd line", and finally "It still made me enter the passphrase and I received this error:{error pasted showing permission denied by $TMP_PATH folder}".
-KEY_PATH="$HOME/CS553/CS553-CaseStudy-01/$TMP_PATH/mykey"
+KEY_PATH="$TMP_PATH/mykey"
 
 eval "$(ssh-agent -s)"
 

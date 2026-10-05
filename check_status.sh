@@ -8,6 +8,7 @@ MACHINE=paffenroth-23.dyn.wpi.edu
 KEY=$HOME/CS553/CS553-CaseStudy-01/tmp/student-admin_key
 chmod 600 ${KEY}
 
+if ssh -i $KEY -o IdentitiesOnly=yes -o IdentityAgent=none -p $((${i} + ${PORT})) -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 student-admin@${MACHINE} hostname; then  # This line was suggested by Claude Opus 4.8 on Medium thinking when asked to help debug why our cron job would always brick the machine on the run immediately after a successful patch and deploy
 if ssh -i $KEY -p $((${i} + ${PORT})) -o StrictHostKeyChecking=no student-admin@${MACHINE} hostname; then
     echo "Our machine is vulnerable!"
     curl -H "Content-Type: application/json" -X POST -d '{"content":"Our machine is vulnerable! Now locking down machine and running red team script."}' ${WEBHOOK_URL}
