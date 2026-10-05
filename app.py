@@ -16,6 +16,17 @@ from huggingface_hub import InferenceClient
 
 model_path = "Qwen/Qwen2.5-0.5B-Instruct"  # Qwen/Qwen2.5-3B-Instruct was used in Case Study 1, but when prompting Claude Opus 5.5 with "I can't use Qwen2.5-3B-Instruct anymore as that is far too large. What other model should I use that is much smaller in size?", it suggests we switch to the 0.5B version to save space on the VM as the original 3B model is quite large (~6gb)
 remote_model_path = "openai/gpt-oss-20b"
+# The below system prompt was adopted from our original LLM prompt by Claude Opus 5.5 on Medium thinking mode in order for the models to create safety advice properly.
+SYSTEM_PROMPT = (
+    "You are a professional safety analyst. The user will give you a description of an image. "
+    "Reply with the most important safety advice for the scene in that image.\n\n"
+    "Format your reply exactly like this:\n"
+    "**<short title>**\n\n"
+    "<one paragraph of 2-4 sentences of safety advice>\n\n"
+    "Rules: Do not ask questions. Do not use bullet points, lists, or headings. "
+    "If the description is vague, give the safety advice that best fits it."
+)
+
 
 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=hf_token)
 model = AutoModelForCausalLM.from_pretrained(model_path, token=hf_token, torch_dtype="auto", device_map="auto")  # Adjusted with Claude Opus 5.5 to run on CPU as CUDA is no longer available
@@ -47,7 +58,7 @@ def gen_local(messages):
     return f"{text}\n\n_(Response time - {elapsed:.2f}s)_"
 
 
-def gen_remote(prompt):
+def gen_remote(messages):
     gr.Info('Calling OpenAI/gpt-oss-20b (remote)...')
     start_time = time.perf_counter()
     inf_client = InferenceClient(token=hf_token)
@@ -57,18 +68,6 @@ def gen_remote(prompt):
     print(f"[TIMING] platform=remote elapsed={elapsed:.2f}s")
     return f"{text}\n\n_(Response time - {elapsed:.2f}s)_"
 
-def get_text_after_colon(input_text):
-    # Find the first occurrence of ":"
-    colon_index = input_text.find(":")
-    
-    # Check if ":" exists in the input_text
-    if colon_index != -1:
-        # Extract the text after the colon
-        result_text = input_text[colon_index + 1:].strip()
-        return result_text
-    else:
-        # Return the original text if ":" is not found
-        return input_text
 
 def infer(image_input, text_input, running_platform):
     """Generate 2-4 sentence of the most important safety advice based on an image using CLIP Interrogator and an LLM.
@@ -105,7 +104,7 @@ def infer(image_input, text_input, running_platform):
 
 css="""
 #col-container {max-width: 910px; margin-left: auto; margin-right: auto;}
-div#safety_advice textarea {
+div#safety_advice {
     font-size: 1.5em;
     line-height: 1.4em;
 }
@@ -126,7 +125,7 @@ with gr.Blocks(css=css) as demo:
                 running_platform = gr.Radio(label="LLM Model", choices=["Local (Qwen/Qwen2.5-0.5B-Instruct)", "Remote (OpenAI/gpt-oss-20b)"])
                 submit_btn = gr.Button('Give me safety advice')
             with gr.Column():
-                safety_advice = gr.Textbox(label="Generated Safety Advice", elem_id="safety_advice")
+                safety_advice = gr.Markdown(label="Generated Safety Advice", elem_id="safety_advice")  # Textbox was changed to Markdown as suggested by Claude 5.5 on Medium thinking to better format the LLM output.
         
     submit_btn.click(fn=infer, inputs=[image_in, text_input, running_platform], outputs=[safety_advice])
 
