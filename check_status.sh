@@ -14,9 +14,7 @@ if ssh -i $KEY -o IdentitiesOnly=yes -o IdentityAgent=none -p $((${i} + ${PORT})
     chmod 700 $HOME/CS553/CS553-CaseStudy-01/deploy_first_part.sh
     chmod 700 $HOME/CS553/CS553-CaseStudy-01/red_team_v1.sh
     bash $HOME/CS553/CS553-CaseStudy-01/deploy_first_part.sh
-    #bash $HOME/CS553/CS553-CaseStudy-01/red_team_v1.sh
-    echo "Patching (hopefully) complete and red team script ran."
+    echo "Machine is now secured (assuming no errors above) and product is deployed"
 else
     echo "Our machine is protected!"
-    #curl -H "Content-Type: application/json" -X POST -d '{"content":"Our machine is protected! One last test."}' ${WEBHOOK_URL}
 fi
