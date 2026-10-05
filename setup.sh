@@ -27,13 +27,16 @@ if [ ! -f "$REQUIREMENTS_FILE" ]; then
     exit 1
 fi
 
+# Updated the following block of code with Claude Opus 5.5 on Medium thinking when asked why pip was not installing on the remote machine (issue was caused due to lack of sudo)
 echo "Creating virtual environment..."
-if [ ! -d "$VENV_DIR" ]; then
-    apt install python3-venv
-    python3 -m venv "$VENV_DIR"
+if [ ! -x "$VENV_DIR/bin/pip" ]; then
+    rm -rf "$VENV_DIR"
+    python3 -m venv --without-pip "$VENV_DIR"
+    curl -sS https://bootstrap.pypa.io/get-pip.py | "$VENV_DIR/bin/python"
 else
     echo "Virtual environment already exists."
 fi
+
 
 echo "Activating virtual environment..."
 source "$VENV_DIR/bin/activate"
@@ -53,4 +56,3 @@ echo
 echo "To activate it manually:"
 echo "  cd $PROJECT_DIR"
 echo "  source .venv/bin/activate"
-```

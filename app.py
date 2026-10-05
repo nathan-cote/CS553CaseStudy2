@@ -14,7 +14,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from huggingface_hub import InferenceClient
 
-model_path = "Qwen/Qwen2.5-0B-Instruct"  # Qwen/Qwen2.5-3B-Instruct was used in Case Study 1, but when prompting Claude Opus 5.5 with "I can't use Qwen2.5-3B-Instruct anymore as that is far too large. What other model should I use that is much smaller in size?", it suggests we switch to the 0.5B version to save space on the VM as the original 3B model is quite large (~6gb)
+model_path = "Qwen/Qwen2.5-0.5B-Instruct"  # Qwen/Qwen2.5-3B-Instruct was used in Case Study 1, but when prompting Claude Opus 5.5 with "I can't use Qwen2.5-3B-Instruct anymore as that is far too large. What other model should I use that is much smaller in size?", it suggests we switch to the 0.5B version to save space on the VM as the original 3B model is quite large (~6gb)
 remote_model_path = "openai/gpt-oss-20b"
 
 tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False, token=hf_token)
