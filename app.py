@@ -1,6 +1,5 @@
 # Original product reference: https://huggingface.co/spaces/fffiloni/Image-to-Story
 
-import spaces
 import gradio as gr
 import re
 import os
