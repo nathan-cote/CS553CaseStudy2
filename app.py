@@ -126,7 +126,7 @@ with gr.Blocks(css=css) as demo:
                 running_platform = gr.Radio(label="LLM Model", choices=["Local (Qwen/Qwen2.5-0.5B-Instruct)", "Remote (OpenAI/gpt-oss-20b)"])
                 submit_btn = gr.Button('Give me safety advice')
             with gr.Column():
-                safety_advice = gr.Markdown(label="Generated Safety Advice", elem_id="safety_advice")  # Suggested by Claude Opus 5.5 on Medium thinking to change this from a Textbox to a Markdown for better formatting.
+                safety_advice = gr.Textbox(label="Generated Safety Advice", elem_id="safety_advice")
         
     submit_btn.click(fn=infer, inputs=[image_in, text_input, running_platform], outputs=[safety_advice])
 
