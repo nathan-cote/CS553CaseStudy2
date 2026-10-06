@@ -77,6 +77,7 @@ scp -P ${PORT} -o StrictHostKeyChecking=no -r CS553CaseStudy2 student-admin@${MA
 COMMAND="ssh -p ${PORT} -o StrictHostKeyChecking=no student-admin@${MACHINE}"
 
 scp -P ${PORT} -o StrictHostKeyChecking=no ~/.hf_token student-admin@${MACHINE}:~/.hf_token  # Suggested by Claude Opus 5.5 on Medium thinking when asked how to securely send my HuggingFace token to the class vm
+${COMMAND} "umask 077 && cat > ~/.discord_webhook" <<< "$WEBHOOK_URL"  # Suggested by Claude Opus 5.5 on Medium thinking in conjunction with monitor.py
 ${COMMAND} "cd ~/CS553CaseStudy2 && chmod +x setup.sh && ./setup.sh"
 
 # ${COMMAND} "ls CS553_example"

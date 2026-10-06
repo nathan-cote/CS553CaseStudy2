@@ -59,6 +59,13 @@ else
     echo "WARNING: ~/.hf_token not found, remote model will not work"
 fi
 
+# Suggested by Claude Opus 5.5 on Medium thinking in conjunction with monitor.py
+if [ -f "$HOME/.discord_webhook" ]; then
+    export DISCORD_WEBHOOK_URL="$(cat "$HOME/.discord_webhook")"
+else
+    echo "WARNING: ~/.discord_webhook not found, resource alerts will not be sent to Discord"
+fi
+
 echo "Starting app..."
 nohup "$VENV_DIR/bin/python" app.py > "$PROJECT_DIR/log.txt" 2>&1 < /dev/null &
 echo "App started with PID $! (log: $PROJECT_DIR/log.txt)"

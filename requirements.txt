@@ -4,3 +4,4 @@ transformers
 accelerate
 gradio[mcp]
 huggingface_hub
+psutil

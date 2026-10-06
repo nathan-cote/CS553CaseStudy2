@@ -5,6 +5,9 @@ import re
 import os
 import time
 hf_token = os.environ.get('HF_TOKEN')
+# Monitor imports as suggested by Claude Opus 5.5 with Medium thinking in conjunction with the monitor.py script.
+import monitor
+monitor.start_monitor()
 
 from gradio_client import Client, handle_file
 
@@ -102,11 +105,19 @@ def infer(image_input, text_input, running_platform):
     # Simplified by Claude Opus 5.5 on Medium thinking into the below return statement as there was unneeded bloat from the original product on HuggingFace.
     return gen_safety_advice(clipi_result, running_platform)
 
+# The resource-warning css format was suggested by Claude Opus 5.5 with Medium thinking in conjuction with monitor.py.
 css="""
 #col-container {max-width: 910px; margin-left: auto; margin-right: auto;}
 div#safety_advice {
     font-size: 1.5em;
     line-height: 1.4em;
+}
+#resource-warning {
+    background: #fdecea;
+    color: #b71c1c;
+    border: 1px solid #f5c2c0;
+    border-radius: 8px;
+    padding: 12px 16px;
 }
 """
 
@@ -118,6 +129,7 @@ with gr.Blocks(css=css) as demo:
             <p style="text-align: center">Upload an image, get safety advice based on the image content!</p>
             """
         )
+        warning_banner = gr.HTML()  # Suggested by Claude Opus 5.5 on Medium thinking in conjunction with monitor.py
         with gr.Row():
             with gr.Column():
                 image_in = gr.Image(label="Image Input", type="filepath", elem_id="image-in")
@@ -128,5 +140,7 @@ with gr.Blocks(css=css) as demo:
                 safety_advice = gr.Markdown(label="Generated Safety Advice", elem_id="safety_advice")  # Textbox was changed to Markdown as suggested by Claude 5.5 on Medium thinking to better format the LLM output.
         
     submit_btn.click(fn=infer, inputs=[image_in, text_input, running_platform], outputs=[safety_advice])
+    monitor_timer = gr.Timer(5)  # Suggested by Claude Opus 5.5 on Medium thinking in conjunction with monitor.py
+    monitor_timer.tick(fn=monitor.get_warning_html, outputs=[warning_banner], show_progress="hidden")  # Suggested by Claude Opus 5.5 on Medium thinking in conjunction with monitor.py
 
-demo.queue(max_size=12).launch(server_name="0.0.0.0", ssr_mode=False, mcp_server=True)  # Adjusted with Claude Opus 5.5 when asked how to adjust to run on a vm instead of a HuggingFace space - necessary change to allow Gradio to accept connections outside the VM
+demo.queue(max_size=12).launch(server_name="0.0.0.0", ssr_mode=False, mcp_server=True)  # Adjusted with Claude Opus 5.5 on Medium thinking when asked how to adjust to run on a vm instead of a HuggingFace space - necessary change to allow Gradio to accept connections outside the VM
