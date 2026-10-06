@@ -75,7 +75,7 @@ def get_warning_html():
         value, threshold = readings[name]
         started = time.strftime("%H:%M:%S", time.localtime(since))
         lines.append(
-            f"WARNING <b>{name} usage is {value:.1f}%</b>, above the {threshold:.0f}% threshold "
+            f"WARNING {name} usage is {value:.1f}%, above the {threshold:.0f}% threshold "
             f"(since {started}). Responses may be slow."
         )
     if not lines:

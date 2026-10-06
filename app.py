@@ -114,7 +114,7 @@ div#safety_advice {
 }
 #resource-warning {
     background: #fdecea;
-    color: #b71c1c;
+    color: #750707;
     border: 1px solid #f5c2c0;
     border-radius: 8px;
     padding: 12px 16px;
